@@ -1,0 +1,22 @@
+{
+  "name": "kostracker",
+  "version": "1.0.0",
+  "description": "Kos Tracker For Roblox",
+  "main": "kostrackerr.js",
+  "scripts": {
+    "start": "concurrently \"node kostrackerr.js\" \"python your_script.py\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "charmfool",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5",
+    "env": "^0.0.2",
+    "express": "^4.21.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
