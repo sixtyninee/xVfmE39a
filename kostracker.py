@@ -80,11 +80,24 @@ def fetch_thumbnails(player_tokens):
     else:
         raise Exception("Failed to fetch thumbnails")
 
-# Function to send a message to a Discord channel
-async def send_message_to_discord_channel(channel_id, message):
+async def send_embed_to_discord_channel(channel_id, username, avatar_url, role_id, place_id):
     channel = client.get_channel(channel_id)
     if channel:
-        await channel.send(message)
+        # First, send a text message pinging the role
+        await channel.send(f"<@&{role_id}>")
+
+        # Generate the link to the game using the Place ID
+        game_link = f"https://www.roblox.com/games/{place_id}"
+
+        # Then, send the embedded message
+        embed = discord.Embed(title="Found player in-game", color=0x00ff00)  # Green color
+        embed.add_field(name="Username", value=username, inline=True)  # Include player username field
+        embed.set_thumbnail(url=avatar_url)  # Avatar thumbnail on the right
+
+        # Add "Click here to join" link in the description
+        embed.description = f"[Link to the game]({game_link})"
+
+        await channel.send(embed=embed)
     else:
         print(f"Channel with ID {channel_id} not found.")
 
@@ -92,14 +105,13 @@ async def send_message_to_discord_channel(channel_id, message):
 async def search_player_in_game(user_id, place_id, channel_id, found_users):
     try:
         target_thumb_url = get_user_thumbnail(user_id)
-        username = get_username_from_user_id(user_id)  # Fetch the username here
+        username = get_username_from_user_id(user_id)
         print(f"Searching for user ID: {user_id} with thumbnail: {target_thumb_url}")
 
         searching = True
         cursor = ""
         all_player_tokens = []
 
-        # Loop through the servers and gather player tokens
         while searching:
             servers = get_server_list(place_id, cursor)
             cursor = servers.get("nextPageCursor")
@@ -108,11 +120,11 @@ async def search_player_in_game(user_id, place_id, channel_id, found_users):
                 all_player_tokens.extend(server["playerTokens"])
 
             if not cursor:
-                break  # No more servers
+                break
 
-        # Search through player tokens in chunks
         chunk_size = 100
         found = False
+        instance_id = None  # Variable to store the instance ID
         i = 0
         role_id = "1293593686998913076"
 
@@ -125,21 +137,23 @@ async def search_player_in_game(user_id, place_id, channel_id, found_users):
                 if thumb['imageUrl'] == target_thumb_url:
                     found = True
                     print(f"Found user ID: {user_id} in the game!")
-                    
-                    # Only send message if the user was not found in the previous round
+
+                    # Capture the server's instance ID
+                    instance_id = thumb['requestId'].split(":")[1]  # Extract instance ID from requestId
+
                     if not found_users.get(user_id, False):
-                        await send_message_to_discord_channel(channel_id, f"<@&{role_id}> Player {username} found in-game!")  # Use username instead of user_id
-                    found_users[user_id] = True  # Mark as found
+                        await send_embed_to_discord_channel(channel_id, username, target_thumb_url, role_id, place_id)  # Send embed message with join link
+                    found_users[user_id] = True
                     break
 
-            await asyncio.sleep(1)  # Use async sleep to avoid blocking the event loop
+            await asyncio.sleep(1)
 
         if not found:
             print(f"User ID: {user_id} not found in any server.")
-            found_users[user_id] = False  # Reset the found status if not found
+            found_users[user_id] = False
         else:
             print("Player search complete.")
-    
+
     except Exception as e:
         print(f"Error: {str(e)}")
 
