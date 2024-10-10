@@ -158,7 +158,7 @@ async def search_player_in_game(user_id, place_id, channel_id, found_users):
         print(f"Error: {str(e)}")
 
 # Function to run searches for all user IDs in a loop
-async def search_multiple_users(user_ids, place_id, channel_id, delay_between_users=30, delay_between_rounds=120):
+async def search_multiple_users(user_ids, place_id, channel_id, delay_between_users=25, delay_between_rounds=80):
     found_users = {}  # Dictionary to track found status of user IDs
     while True:
         print("Starting new search round...")
