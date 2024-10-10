@@ -86,10 +86,10 @@ async def send_message_to_discord_channel(channel_id, message):
         print(f"Channel with ID {channel_id} not found.")
 
 # Main search function
-async def search_player_in_game(user_id, place_id, channel_id):
+async def search_player_in_game(user_id, place_id, channel_id, found_users):
     try:
         target_thumb_url = get_user_thumbnail(user_id)
-        username = get_username_from_user_id(user_id)
+        username = get_username_from_user_id(user_id)  # Fetch the username here
         print(f"Searching for user ID: {user_id} with thumbnail: {target_thumb_url}")
 
         searching = True
@@ -122,13 +122,18 @@ async def search_player_in_game(user_id, place_id, channel_id):
                 if thumb['imageUrl'] == target_thumb_url:
                     found = True
                     print(f"Found user ID: {user_id} in the game!")
-                    await send_message_to_discord_channel(channel_id, f"<@&{role_id}> Player {username} found in-game!")  # Use username instead of user_id
+                    
+                    # Only send message if the user was not found in the previous round
+                    if not found_users.get(user_id, False):
+                        await send_message_to_discord_channel(channel_id, f"<@&{role_id}> Player {username} found in-game!")  # Use username instead of user_id
+                    found_users[user_id] = True  # Mark as found
                     break
 
             await asyncio.sleep(1)  # Use async sleep to avoid blocking the event loop
 
         if not found:
             print(f"User ID: {user_id} not found in any server.")
+            found_users[user_id] = False  # Reset the found status if not found
         else:
             print("Player search complete.")
     
@@ -136,11 +141,12 @@ async def search_player_in_game(user_id, place_id, channel_id):
         print(f"Error: {str(e)}")
 
 # Function to run searches for all user IDs in a loop
-async def search_multiple_users(user_ids, place_id, channel_id, delay_between_users=25, delay_between_rounds=80):
+async def search_multiple_users(user_ids, place_id, channel_id, delay_between_users=30, delay_between_rounds=120):
+    found_users = {}  # Dictionary to track found status of user IDs
     while True:
         print("Starting new search round...")
         for user_id in user_ids:
-            await search_player_in_game(user_id, place_id, channel_id)
+            await search_player_in_game(user_id, place_id, channel_id, found_users)
             print(f"Waiting {delay_between_users} seconds before searching for the next user...")
             await asyncio.sleep(delay_between_users)  # Use async sleep instead of time.sleep
         print(f"Completed round of searches. Waiting {delay_between_rounds} seconds before starting over...")
@@ -159,6 +165,7 @@ user_ids = fetch_user_ids_from_github(github_url)
 async def on_ready():
     print(f'Logged in as {client.user}!')
     await search_multiple_users(user_ids, place_id, discord_channel_id)
+
 
 
 
