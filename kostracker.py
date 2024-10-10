@@ -77,11 +77,18 @@ def fetch_thumbnails(player_tokens):
     else:
         raise Exception("Failed to fetch thumbnails")
 
-# Function to send a message to a Discord channel
-async def send_message_to_discord_channel(channel_id, message):
+# Function to send an embedded message to a Discord channel
+async def send_embed_to_discord_channel(channel_id, username, server_link, avatar_url, role_id):
     channel = client.get_channel(channel_id)
     if channel:
-        await channel.send(message)
+        embed = discord.Embed(
+            title="Player found in-game!", 
+            description=f"Player: **{username}**", 
+            color=discord.Color.green()
+        )
+        embed.add_field(name="Server Link", value=f"[Click here to join]({server_link})", inline=False)
+        embed.set_thumbnail(url=avatar_url)  # Add player's avatar on the right side
+        await channel.send(content=f"<@&{role_id}>", embed=embed)
     else:
         print(f"Channel with ID {channel_id} not found.")
 
@@ -125,7 +132,13 @@ async def search_player_in_game(user_id, place_id, channel_id, found_users):
                     
                     # Only send message if the user was not found in the previous round
                     if not found_users.get(user_id, False):
-                        await send_message_to_discord_channel(channel_id, f"<@&{role_id}> Player {username} found in-game!")  # Use username instead of user_id
+                        # Get the specific server's gameId (server ID) for the link
+                        for server in servers['data']:
+                            if thumb["targetId"] in server["playerTokens"]:
+                                game_id = server["id"]  # Extract the game ID (server ID)
+                                server_link = f"https://www.roblox.com/games/{place_id}?gameId={game_id}"
+                                await send_embed_to_discord_channel(channel_id, username, server_link, target_thumb_url, role_id)
+                                break
                     found_users[user_id] = True  # Mark as found
                     break
 
@@ -165,8 +178,5 @@ user_ids = fetch_user_ids_from_github(github_url)
 async def on_ready():
     print(f'Logged in as {client.user}!')
     await search_multiple_users(user_ids, place_id, discord_channel_id)
-
-
-
 
 client.run(DISCORD_BOT_TOKEN)
