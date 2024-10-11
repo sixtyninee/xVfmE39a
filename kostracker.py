@@ -124,7 +124,6 @@ async def search_player_in_game(user_id, place_id, channel_id, found_users):
 
         chunk_size = 100
         found = False
-        instance_id = None  # Variable to store the instance ID
         i = 0
         role_id = "1293593686998913076"
 
@@ -137,9 +136,6 @@ async def search_player_in_game(user_id, place_id, channel_id, found_users):
                 if thumb['imageUrl'] == target_thumb_url:
                     found = True
                     print(f"Found user ID: {user_id} in the game!")
-
-                    # Capture the server's instance ID
-                    instance_id = thumb['requestId'].split(":")[1]  # Extract instance ID from requestId
 
                     if not found_users.get(user_id, False):
                         await send_embed_to_discord_channel(channel_id, username, target_thumb_url, role_id, place_id)  # Send embed message with join link
@@ -158,29 +154,30 @@ async def search_player_in_game(user_id, place_id, channel_id, found_users):
         print(f"Error: {str(e)}")
 
 # Function to run searches for all user IDs in a loop
-async def search_multiple_users(user_ids, place_id, channel_id, delay_between_users=25, delay_between_rounds=80):
+async def search_multiple_users(place_id, channel_id, delay_between_users=30, delay_between_rounds=120):
     found_users = {}  # Dictionary to track found status of user IDs
+    github_url = "https://raw.githubusercontent.com/sixtyninee/rahruh/refs/heads/main/koslist.json"
+
     while True:
+        print("Fetching updated user IDs from GitHub...")
+        user_ids = fetch_user_ids_from_github(github_url)  # Fetch fresh user IDs
+
         print("Starting new search round...")
         for user_id in user_ids:
             await search_player_in_game(user_id, place_id, channel_id, found_users)
             print(f"Waiting {delay_between_users} seconds before searching for the next user...")
             await asyncio.sleep(delay_between_users)  # Use async sleep instead of time.sleep
+
         print(f"Completed round of searches. Waiting {delay_between_rounds} seconds before starting over...")
         await asyncio.sleep(delay_between_rounds)  # Use async sleep instead of time.sleep
-
-# Example usage
-github_url = "https://raw.githubusercontent.com/sixtyninee/rahruh/refs/heads/main/koslist.json"
-place_id = "2988554876"  # Replace with the Place ID of the game
-discord_channel_id = 1293410574239273011  # Replace with your Discord channel ID you want messages to be in
-
-# Fetch user IDs from GitHub
-user_ids = fetch_user_ids_from_github(github_url)
 
 # Start the Discord bot
 @client.event
 async def on_ready():
     print(f'Logged in as {client.user}!')
-    await search_multiple_users(user_ids, place_id, discord_channel_id)
+    place_id = "2988554876"  # Replace with the Place ID of the game
+    discord_channel_id = 1293410574239273011  # Replace with your Discord channel ID you want messages to be in
+    await search_multiple_users(place_id, discord_channel_id)
+
 
 client.run(DISCORD_BOT_TOKEN)
