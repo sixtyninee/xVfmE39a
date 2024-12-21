@@ -148,7 +148,7 @@ async def search_player_in_game(user_id, place_id, channel_id, found_users):
     except Exception as e:
         print(f"Error: {str(e)}")
 
-async def search_multiple_users(place_id, channel_id, delay_between_users=30, delay_between_rounds=120):
+async def search_multiple_users(place_id, channel_id, delay_between_users=25, delay_between_rounds=100):
     found_users = {}  # Dictionary to track found status of user IDs
     github_url = "https://raw.githubusercontent.com/sixtyninee/rahruh/refs/heads/main/koslist.json"
 
