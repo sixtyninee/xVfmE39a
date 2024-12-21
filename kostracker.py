@@ -4,6 +4,7 @@ import time
 import discord
 import asyncio
 from dotenv import load_dotenv
+import aiohttp
 
 load_dotenv()
 DISCORD_BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
@@ -165,13 +166,29 @@ async def search_multiple_users(place_id, channel_id, delay_between_users=25, de
         print(f"Completed round of searches. Waiting {delay_between_rounds} seconds before starting over...")
         await asyncio.sleep(delay_between_rounds)  # Use async sleep instead of time.sleep
 
+async def keep_alive():
+    while True:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get("https://xvfme39a.onrender.com") as response:
+                    if response.status == 200:
+                        print("Successfully pinged the service!")
+                    else:
+                        print(f"Unexpected response status: {response.status}")
+        except Exception as e:
+            print(f"Error while pinging the service: {e}")
+        await asyncio.sleep(300)  # Ping every 5 minutes
+
 # Start the Discord bot
 @client.event
 async def on_ready():
     print(f'Logged in as {client.user}!')
     place_id = "2988554876"
     discord_channel_id = 1293410574239273011
-    await search_multiple_users(place_id, discord_channel_id)
+    await asyncio.gather(
+        search_multiple_users(place_id, discord_channel_id),
+        keep_alive(),
+    )
 
 
 client.run(DISCORD_BOT_TOKEN)
