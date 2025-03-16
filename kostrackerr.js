@@ -25,7 +25,7 @@ const REPO_OWNER = "sixtyninee"; // Your GitHub username
 const REPO_NAME = "rahruh"; // Your GitHub repository name
 const FILE_PATH = "koslist.json"; // Path to the JSON file in the repo
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN; // Your Discord bot token
-const ALLOWED_CHANNEL_ID = "1293410179123122347";
+const ALLOWED_CHANNEL_ID = "1350644848356495491";
 
 const client = new Client({
     intents: [
