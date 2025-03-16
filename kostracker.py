@@ -121,7 +121,7 @@ async def search_player_in_game(user_id, place_id, channel_id, found_users):
         chunk_size = 100
         found = False
         i = 0
-        role_id = "1293593686998913076"
+        role_id = "1350645453682638889"
 
         while i < len(all_player_tokens) and not found:
             chunk = all_player_tokens[i:i + chunk_size]
@@ -184,7 +184,7 @@ async def keep_alive():
 async def on_ready():
     print(f'Logged in as {client.user}!')
     place_id = "2988554876"
-    discord_channel_id = 1293410574239273011
+    discord_channel_id = 1350644848356495491
     await asyncio.gather(
         search_multiple_users(place_id, discord_channel_id),
         keep_alive(),
